@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% block body %}
+<a href="/">← all jobs</a>
+<h1>{{ job.title }} <span class="badge">{{ labels.get(job.category, "Unscored") }}</span></h1>
+<p class="muted">{{ job.company_name }} · {{ job.location_raw or "location n/a" }}
+  · {{ job.work_arrangement or "unknown" }} · evidence {{ job.evidence_confidence }}</p>
+<p class="score">{{ job.claude_score if job.claude_score is not none else job.final_score }}/100{% if job.claude_score is not none %} <span class="muted">— ✨ Claude score (keyword score {{ job.final_score }}/100)</span>{% else %} <span class="muted">(raw {{ job.raw_score }})</span>{% endif %}</p>
+{% if job.excluded %}<p class="exclude">EXCLUDED — {{ job.exclusion_reason }}</p>{% endif %}
+{% if job.claude_reason %}
+<div class="card" style="border-left:4px solid var(--accent)">
+  <strong>✨ Claude verdict</strong> — fit: {{ job.claude_fit }} · remote: {{ job.claude_remote }}
+  <div class="muted">{{ job.claude_reason }}</div>
+</div>
+{% endif %}
+<pre class="explain">{{ job.explanation_text }}</pre>
+<h3>Score breakdown</h3><pre>{{ job.breakdown_json }}</pre>
+<h3>Penalties</h3><pre>{{ job.penalties_json }}</pre>
+<p>
+  {% if job.application_url %}
+  <a class="btn btn--primary" href="{{ job.application_url }}" target="_blank" rel="noopener">Open Application ↗</a>
+  <button class="btn" type="button" onclick="navigator.clipboard.writeText('{{ job.application_url }}')">Copy link</button>
+  {% else %}<em>No application URL provided.</em>{% endif %}
+</p>
+<form method="post" action="/job/{{ job.id }}/decision" class="decision">
+  <label>Status
+    <select name="status">
+      {% for s in ["new","saved","rejected","applied"] %}
+      <option value="{{ s }}" {{ "selected" if job.status==s else "" }}>{{ s }}</option>{% endfor %}
+    </select></label>
+  <label>Notes<textarea name="notes" rows="3">{{ job.notes or "" }}</textarea></label>
+  <button>Save decision</button>
+</form>
+{% endblock %}

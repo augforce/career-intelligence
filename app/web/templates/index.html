@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% block body %}
+<section class="search">
+<form method="post" action="/paste">
+  <h2 style="margin-top:0">Evaluate a job</h2>
+  <p class="muted">Found a role on LinkedIn, Indeed, anywhere? Select the whole posting, copy it,
+    and paste it below — Claude pulls out the details and gives you the fit verdict.</p>
+  <textarea name="posting" rows="7" required
+    placeholder="Paste the entire job posting here — title, company, description, all of it."></textarea>
+  <button>Evaluate this role</button>
+</form>
+</section>
+
+<details><summary>Search job boards by keyword (broader, slower, noisier than LinkedIn)</summary>
+<section class="search">
+<form method="post" action="/search">
+  <div class="row">
+    <input name="query" placeholder="keywords / job title — e.g. AI platform operations" required value="{{ query|default('') }}">
+    <input name="location" placeholder="location" value="United States">
+    <button>Search jobs</button>
+  </div>
+  <label class="inline"><input type="checkbox" name="remote_only" checked> Remote only</label>
+  <label class="inline">Posted
+    <select name="date_posted">
+      <option value="all">any time</option><option value="today">today</option>
+      <option value="3days">3 days</option><option value="week">past week</option><option value="month">past month</option>
+    </select></label>
+  <label class="inline">Results/source <input type="number" name="limit" value="10" min="1" max="50"></label>
+  <span class="muted">JSearch used: {{ jsearch_quota|default(0) }}/200 this month</span>
+</form>
+</section>
+</details>
+
+<details><summary>Other ways to add a job</summary>
+<section class="actions"><form method="post" action="/scan/mock"><button>Run mock scan</button></form></section>
+<form method="post" action="/import" class="import">
+  <label>Title*<input name="title" required></label>
+  <label>Company*<input name="company" required></label>
+  <label>Application URL<input name="application_url" placeholder="https://… (link only, never fetched)"></label>
+  <label>Location<input name="location"></label>
+  <label>Work arrangement override
+    <select name="work_arrangement"><option value="">(auto-detect)</option>
+      <option value="fully_remote">Fully Remote</option>
+      <option value="remote_with_restrictions">Remote With Restrictions</option>
+      <option value="remote_with_travel">Remote With Travel</option>
+      <option value="hybrid">Hybrid</option><option value="on_site">On-Site</option>
+      <option value="unknown">Unknown</option></select></label>
+  <label>Full description*<textarea name="description" rows="8" required></textarea></label>
+  <button>Import &amp; score</button>
+</form>
+</details>
+
+{% if search_status %}
+<div class="status"><strong>Sources:</strong>
+  {% for s in search_status %}<span class="badge">{{ s.name }} — {{ s.status }}{% if s.count is defined %} ({{ s.count }}){% endif %}</span>{% endfor %}
+  {% if claude_on %}<span class="badge">✨ Claude verified</span>{% endif %}
+  {% if claude_dropped %}<span class="muted">· removed {{ claude_dropped }} on-site</span>{% endif %}
+  {% if hidden_poor %}<span class="muted">· hid {{ hidden_poor }} non-matches</span>{% endif %}
+</div>
+{% endif %}
+
+<h2>Jobs ({{ jobs|length }})</h2>
+{% for j in jobs %}
+<article class="card cat-{{ j.category }}">
+  <div class="row"><a href="/job/{{ j.id }}"><strong>{{ j.title }}</strong></a>
+    <span class="badge">{{ labels.get(j.category, "Unscored") }}</span>
+    {% if j.claude_reason %}<span class="badge">✨ Claude</span>{% endif %}
+    <span class="score">{{ j.claude_score if j.claude_score is not none else (j.final_score if j.final_score is not none else "—") }}/100</span></div>
+  <div class="muted">{{ j.company_name }} · {{ j.work_arrangement or "unknown" }}
+    · evidence: {{ j.evidence_confidence or "—" }}{% if j.claude_score is not none %} · keyword {{ j.final_score }}{% endif %}</div>
+  {% if j.excluded %}<div class="exclude">EXCLUDED — {{ j.exclusion_reason }}</div>{% endif %}
+  {% if j.claude_reason %}<div class="muted">✨ {{ j.claude_reason }}</div>{% endif %}
+</article>
+{% else %}<p class="muted">No jobs yet. Paste a posting above to evaluate it.</p>{% endfor %}
+{% endblock %}

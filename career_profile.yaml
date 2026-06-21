@@ -1,0 +1,116 @@
+profile_version: 1
+
+identity:
+  name: Target Candidate
+  base_state: MO
+  country: US
+
+target_work_mix: { building: 40, platform_admin: 30, enablement: 20, support: 10 }
+
+# Weighted scoring dimensions (must sum to 100)
+# Target archetype: "AI Systems Administrator" — administering/operating enterprise AI
+# platforms, identity/access/provisioning, integrations, with a support twist and some
+# building. NOT pure SysAdmin (AI must be present), NOT software engineering.
+weights:
+  ai_platform_relevance: 26
+  current_strengths: 20
+  enablement_fit: 16
+  remote_fit: 15
+  build_intensity: 13
+  developer_proximity: 5
+  career_progression: 5
+
+# Distinct favorable keyword hits saturate a dimension at this count.
+# Lower = more generous (a role needs fewer matching terms to max a dimension).
+signal_saturation: 2
+
+favorable_signals:
+  build_intensity: ["internal tool", "automation", "integration", "integrations", "workflow automation", "implementation", "deploy", "deployment", "configure", "configuration", "tooling", "orchestration", "scripting", "no-code", "low-code"]
+  ai_platform_relevance: ["microsoft foundry", "azure ai", "azure openai", "model deployment", "llm", "rbac", "content filter", "content safety", "model evaluation", "ai governance", "responsible ai", "guardrails", "ai platform", "ai platforms", "enterprise ai", "chatgpt enterprise", "microsoft copilot", "copilot", "ai assistant", "platform administration", "administer", "ai operations", "model catalog", "generative ai", "gen ai", "openai", "anthropic", "claude", "prompt", "rag", "foundation model", "management console", "quota", "cost controls"]
+  career_progression: ["applied ai", "ai implementation", "ai adoption", "ai-assisted", "ai workflow", "ai tooling", "ai enablement"]
+  developer_proximity: ["developer enablement", "developer experience", "developer support", "work with engineers", "platform team", "cross-functional", "technical teams", "internal teams", "business applications"]
+  current_strengths: ["google workspace", "microsoft 365", "active directory", "okta", "slack", "zoom", "bigquery", "oauth", "saml", "sso", "single sign-on", "iam", "identity", "access management", "access control", "user provisioning", "provisioning", "permissions", "security settings", "rest api", "api", "mcp", "secrets management", "monitoring", "observability", "logging", "troubleshooting", "incident", "administration", "system administration", "systems administration", "saas administration", "cloud administration", "enterprise platforms", "configuration", "cloud", "gcp", "azure", "powershell"]
+  enablement_fit: ["documentation", "onboarding", "enablement", "technical enablement", "user enablement", "adoption", "training", "operational support", "platform support", "customer support", "technical writing", "knowledge base", "best practices", "runbook", "office hours", "stakeholders"]
+
+# Maps favorable dimensions -> work-mix buckets (for the estimate)
+work_mix_map:
+  building: ["build_intensity"]
+  platform_admin: ["ai_platform_relevance", "current_strengths"]
+  enablement: ["enablement_fit", "developer_proximity"]
+  support: ["__support_penalty__"]   # uses support penalty keywords
+
+# Graduated penalties (for roles that lean wrong but are not dominated)
+penalty_signals:
+  support_burden:   { keywords: ["ticket", "helpdesk", "help desk", "tier 1", "tier 2", "end-user support", "desktop support", "deskside"], per_hit: 3, max: 15 }
+  # Senior-software-engineering requirements (deep coding + years of dev experience).
+  traditional_dev:  { keywords: ["algorithm", "data structures", "distributed systems", "production code", "system design interview", "years of software", "years of software development", "years of engineering", "years of professional software", "senior software engineer", "staff software engineer", "principal software engineer", "strong programming", "object-oriented", "microservices architecture"], per_hit: 4, max: 24 }
+  sales_customer:   { keywords: ["customer success", "account management", "sales quota", "pre-sales", "upsell", "renewals", "customer programs", "strategic customer", "account executive"], per_hit: 4, max: 16 }
+  # CRM / generic-SaaS-admin roles. "saas administration" is intentionally NOT here —
+  # SaaS/systems administration is a positive for the AI-admin archetype.
+  admin_gravity:    { keywords: ["salesforce", "hubspot", "monday.com", "crm administration", "salesforce administrator"], per_hit: 3, max: 12 }
+  # Pulls generic web/app-dev roles down out of the top bands. "rails" is omitted
+  # on purpose (it is a substring of the favorable term "guardrails").
+  web_dev:          { keywords: ["full stack", "full-stack", "frontend", "front-end", "front end developer", "ruby on rails", "django", "spring boot", "node.js", "angular", "vue.js", "ios developer", "android developer", "mobile developer", "react developer"], per_hit: 4, max: 16 }
+
+# Hard-gate dominance thresholds (testable). A role-gate fires when:
+#   (title_triggers AND any title_keyword present) OR (count of distinct body_keywords >= body_density_min)
+gates:
+  location:
+    gated_arrangements: ["hybrid", "on_site"]   # gated by default unless toggled on
+    relocation_keywords: ["relocation required", "must relocate", "relocate to"]
+    frequent_travel_keywords: ["frequent travel", "travel up to 50", "travel up to 75", "extensive travel"]
+  support:
+    title_keywords: ["help desk", "helpdesk", "desktop support", "support technician", "it support specialist", "tier 1", "tier i"]
+    body_keywords: ["ticket", "tickets", "ticket queue", "triage", "end-user support", "deskside"]
+    title_triggers: true
+    body_density_min: 4
+  admin:
+    title_keywords: ["salesforce administrator", "crm administrator", "hubspot administrator", "saas administrator"]
+    body_keywords: ["salesforce", "hubspot", "monday.com", "crm administration", "saas administration"]
+    title_triggers: true
+    body_density_min: 4
+  sales_customer:
+    title_keywords: ["customer success manager", "account executive", "account manager", "sales engineer", "solutions consultant"]
+    body_keywords: ["quota", "customer success", "account management", "upsell", "renewals", "pre-sales", "pipeline"]
+    title_triggers: true
+    body_density_min: 4
+  traditional_swe:
+    title_keywords: ["senior software engineer", "staff software engineer", "principal software engineer", "backend engineer"]
+    body_keywords: ["5+ years of professional software", "years of software development", "years of software engineering", "senior software engineer", "staff software engineer", "principal software engineer", "algorithm", "data structures", "distributed systems", "production-grade code", "production code", "system design interview", "strong programming", "object-oriented"]
+    title_triggers: false        # title alone is NOT dominant ("engineer" is allowed)
+    body_density_min: 2          # 2+ deep-coding/senior-dev signals => dominated by SWE
+
+remote_fit:
+  unknown_default: 5
+  bands:
+    fully_remote: 15
+    remote_with_restrictions: 10
+    remote_with_travel: 10
+    hybrid: 0
+    on_site: 0
+  limited_states_points: 4       # remote_with_restrictions that names specific states
+  limited_states_keywords: ["only available in", "must reside in", "eligible states", "residents of"]
+
+# Arrangement classification keywords (first match in priority order wins)
+arrangement_keywords:
+  fully_remote: ["fully remote", "100% remote", "fully-remote", "remote-first", "work from anywhere", "remote (us)", "remote - us", "remote, united states", "us remote", "remote within the united states"]
+  remote_with_travel: ["remote with travel", "remote with occasional travel", "occasional travel", "some travel required"]
+  hybrid: ["hybrid", "days in office", "days in the office", "days per week in", "days onsite", "days on-site", "days a week in the office", "partially remote"]
+  on_site: ["on-site", "on site", "onsite", "in-office", "in office", "in person", "in-person", "on premises", "on-premise", "must work on-site", "relocate", "relocation required", "relocation assistance"]
+  remote_with_restrictions: ["remote", "work from home", "telecommute"]
+
+# Evidence-confidence facet keywords (presence => facet covered)
+evidence_facets:
+  work_arrangement: ["remote", "hybrid", "on-site", "onsite", "in office"]
+  responsibilities: ["responsibilities", "you will", "what you'll do", "in this role", "day to day"]
+  requirements: ["requirements", "qualifications", "you have", "must have", "minimum qualifications"]
+  team_context: ["report to", "reporting to", "team", "you'll join", "your manager"]
+
+bands: { strong_match: 75, bridge_role: 60, stretch_role: 45 }
+
+location_defaults:
+  eligible_states: ["ALL_US"]
+  include_travel: false
+  include_hybrid: false
+  include_on_site: false
+  max_travel_pct: 0

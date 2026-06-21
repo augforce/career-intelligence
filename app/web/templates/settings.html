@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block body %}
+<h1>Settings</h1>
+
+<p class="muted">Claude analysis: {% if claude_key %}on ✓ ({{ claude_model }}) — verifies remote + skill-fit on each result{% else %}off — add ANTHROPIC_API_KEY to .env to verify remote + fit with Claude{% endif %}.</p>
+
+<h2>Search sources</h2>
+
+<form method="post" action="/settings" class="import">
+  <fieldset><legend>Use these sources</legend>
+    <label class="inline"><input type="checkbox" name="src_jsearch" {{ "checked" if s.sources.jsearch }}> JSearch (LinkedIn/Indeed/Glassdoor via Google for Jobs) <span class="muted">— {{ "key set ✓" if jsearch_key else "no key set" }}</span></label>
+    <label class="inline"><input type="checkbox" name="src_adzuna" {{ "checked" if s.sources.adzuna }}> Adzuna <span class="muted">— {{ "keys set ✓" if adzuna_key else "no keys set" }}</span></label>
+    <label class="inline"><input type="checkbox" name="src_remotive" {{ "checked" if s.sources.remotive }}> Remotive (free)</label>
+    <label class="inline"><input type="checkbox" name="src_remoteok" {{ "checked" if s.sources.remoteok }}> RemoteOK (free)</label>
+    <label class="inline"><input type="checkbox" name="src_arbeitnow" {{ "checked" if s.sources.arbeitnow }}> Arbeitnow (free)</label>
+  </fieldset>
+
+  <h2>Location &amp; work-arrangement filters</h2>
+  <p class="muted">Default: Remote, United States. Changes apply to the next scan/search.</p>
+  <label><input type="checkbox" name="include_travel" {{ "checked" if s.include_travel }}> Include remote roles with occasional travel</label>
+  <label><input type="checkbox" name="include_hybrid" {{ "checked" if s.include_hybrid }}> Include hybrid roles</label>
+  <label><input type="checkbox" name="include_on_site" {{ "checked" if s.include_on_site }}> Include on-site roles</label>
+  <label>Maximum acceptable travel %<input type="number" name="max_travel_pct" value="{{ s.max_travel_pct }}" min="0" max="100"></label>
+  <label>Eligible states (comma-separated, or ALL_US)<input name="eligible_states" value="{{ s.eligible_states|join(', ') }}"></label>
+  <button>Save settings</button>
+</form>
+<p class="muted">When a role is excluded or penalized for location, the reason is shown on its card and detail page.</p>
+{% endblock %}

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+data/
+.venv/
+.pytest_cache/
+.DS_Store
+.env
+
+# Personal source material — never publish
+reference/
+docs/

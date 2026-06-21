@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block body %}
+<h1>Target-company watchlist</h1>
+<p class="muted">Phase 1: management only — no live fetching yet. Phase 2 will pull open roles
+from active companies' public ATS boards.</p>
+<form method="post" action="/watchlist/add" class="import">
+  <label>Company*<input name="name" required></label>
+  <label>ATS type<select name="ats_type">
+    {% for t in ["unknown","greenhouse","lever","ashby"] %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+  </select></label>
+  <label>Careers URL<input name="careers_url" placeholder="https://…"></label>
+  <label>Notes<input name="notes"></label>
+  <button>Add company</button>
+</form>
+<h2>Companies ({{ companies|length }})</h2>
+{% for co in companies %}
+<article class="card">
+  <div class="row"><strong>{{ co.name }}</strong>
+    <span class="badge">{{ co.ats_type }}</span>
+    <span class="badge">{{ "active" if co.active else "inactive" }}</span></div>
+  <div class="muted">{{ co.careers_url }} — {{ co.notes }}</div>
+  <form method="post" action="/watchlist/{{ co.id }}/toggle" style="display:inline"><button>Toggle active</button></form>
+  <form method="post" action="/watchlist/{{ co.id }}/delete" style="display:inline"><button>Delete</button></form>
+</article>
+{% else %}<p>No companies yet.</p>{% endfor %}
+{% endblock %}

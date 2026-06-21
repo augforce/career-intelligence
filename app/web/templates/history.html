@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block body %}
+<h1>Scan history</h1>
+<p class="muted">Each manual import and mock scan is recorded here with how many jobs it produced
+and how many survived the hard filters.</p>
+<h2>Scans ({{ scans|length }})</h2>
+{% for sc in scans %}
+<article class="card">
+  <div class="row"><strong>{{ sc.source }}</strong>
+    <span class="badge">{{ sc.surviving_count }} / {{ sc.job_count }} survived</span>
+    <span class="muted">{{ sc.created_at }}</span></div>
+</article>
+{% else %}<p>No scans yet. Run a mock scan or import a job.</p>{% endfor %}
+{% endblock %}
