@@ -68,6 +68,10 @@ Set the model with `CI_CLAUDE_MODEL` (default `claude-haiku-4-5`).
   each board returned.
 - **Run mock scan** loads bundled sample jobs for a quick offline demo.
 
+The jobs list always shows just the latest evaluation — each paste, import, or search replaces the
+previous results, so nothing piles up. A **Clear** button on the home page wipes the list and the
+scan History whenever you want (your Filters and Watchlist are kept).
+
 Open any job for the full **score breakdown**, estimated work mix, evidence confidence, the Claude
 verdict (if present), and any **EXCLUDED** reason. Mark save / reject / applied and add notes;
 **History** records each scan and how many jobs survived the hard filters.

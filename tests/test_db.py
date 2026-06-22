@@ -58,6 +58,25 @@ def test_clear_jobs_wipes_jobs_evals_decisions():
     assert db.get_jobs_with_eval(c) == []
 
 
+def test_clear_jobs_also_wipes_claude_verdicts():
+    # Row IDs get reused after a wipe, so a stale verdict must not survive to
+    # attach itself to a future job that happens to land on the same id.
+    c = _conn()
+    jid = db.insert_job(c, NormalizedJob(title="t", company_name="c", description="d", dedupe_hash="h10"))
+    db.insert_evaluation(c, jid, _eval())
+    db.save_claude_verdict(c, jid, "remote", "bridge", 68, "reason", "claude-haiku-4-5")
+    db.clear_jobs(c)
+    assert c.execute("SELECT COUNT(*) FROM claude_verdicts").fetchone()[0] == 0
+
+
+def test_clear_scans_wipes_history():
+    c = _conn()
+    db.record_scan(c, "mock", 5, 2)
+    assert len(db.list_scans(c)) == 1
+    db.clear_scans(c)
+    assert db.list_scans(c) == []
+
+
 def test_get_settings_backfills_new_keys():
     import json as _j
     c = _conn()

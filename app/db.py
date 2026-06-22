@@ -127,10 +127,19 @@ def get_job_detail(conn, job_id: int) -> dict:
 
 
 def clear_jobs(conn) -> None:
-    """Wipe all jobs, evaluations, and decisions (scan history and settings stay)."""
+    """Wipe all jobs, evaluations, decisions, and Claude verdicts (scan history
+    and settings stay). Verdicts go too: row ids are reused after a wipe, so a
+    stale verdict could otherwise re-attach to a future job on the same id."""
     conn.execute("DELETE FROM evaluations")
     conn.execute("DELETE FROM decisions")
+    conn.execute("DELETE FROM claude_verdicts")
     conn.execute("DELETE FROM jobs")
+    conn.commit()
+
+
+def clear_scans(conn) -> None:
+    """Wipe scan history (the History page). Jobs and settings are untouched."""
+    conn.execute("DELETE FROM scans")
     conn.commit()
 
 

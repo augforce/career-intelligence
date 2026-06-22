@@ -108,6 +108,7 @@ def import_job(title: str = Form(...), company: str = Form(...), description: st
                application_url: str = Form(""), location: str = Form(""),
                work_arrangement: str = Form("")):
     conn = db.connect()
+    db.clear_jobs(conn)  # each evaluation replaces the prior one; nothing piles up
     job = manual_job(title, company, description, application_url or None,
                      location or None, work_arrangement or None)
     jid, ev = _ingest(conn, job)
@@ -120,6 +121,7 @@ def import_job(title: str = Form(...), company: str = Form(...), description: st
 def paste(posting: str = Form(...)):
     """Paste a whole job posting; Claude extracts the fields, then we evaluate it."""
     conn = db.connect()
+    db.clear_jobs(conn)  # each evaluation replaces the prior one; nothing piles up
     text = posting.strip()
     fields = claude_judge.extract(text) or {}
     title = (fields.get("title") or "").strip()
@@ -140,6 +142,15 @@ def scan_mock():
     db.clear_jobs(conn)  # fresh result set each scan
     evs = [_ingest(conn, job)[1] for job in MockProvider().fetch()]
     db.record_scan(conn, "mock", len(evs), sum(1 for e in evs if not e.gate_result.excluded))
+    return RedirectResponse("/", status_code=303)
+
+
+@app.post("/clear")
+def clear():
+    """Wipe the jobs list and scan History on demand (Filters/Watchlist stay)."""
+    conn = db.connect()
+    db.clear_jobs(conn)
+    db.clear_scans(conn)
     return RedirectResponse("/", status_code=303)
 
 

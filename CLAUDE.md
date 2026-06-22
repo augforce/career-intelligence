@@ -37,12 +37,15 @@ analysis/explainer (DeterministicExplainer)              # structured eval -> pr
 analysis/claude_judge (optional)                         # posting -> {remote, fit, score, reason}
 app/evaluate.py   orchestrates deterministic scoring per job
 app/db.py         only module that touches SQLite (jobs, evaluations, claude_verdicts, ...)
-app/main.py       routes: / /search /import /paste /scan/mock /settings /watchlist /history
+app/main.py       routes: / /search /import /paste /scan/mock /clear /settings /watchlist /history
 ```
 
 `_ingest()` runs deterministic scoring + stores the job. `_claude_pass()` runs `claude_judge.judge()`
 on top, saves the verdict (incl. `score`) to `claude_verdicts`, and re-categorizes via `_FIT_TO_CAT`.
-Both `/import` and `/paste` ingest then Claude-pass, then redirect to `/job/{id}`.
+Both `/import` and `/paste` first wipe the existing jobs (each evaluation replaces the prior one — the
+list never piles up), then ingest, Claude-pass, and redirect to `/job/{id}`. `/clear` wipes the jobs
+list and scan history on demand (Filters/Watchlist stay); `clear_jobs()` also drops `claude_verdicts`
+since row ids are reused after a wipe.
 
 `/paste` is the centerpiece: `claude_judge.extract()` pulls title/company/location out of a pasted
 blob (falling back to the first line when Claude is off), then the normal pipeline runs. `/search`

@@ -201,6 +201,36 @@ def test_settings_source_toggle_persists(tmp_path, monkeypatch):
     assert s["sources"]["remoteok"] is False and s["sources"]["remotive"] is True
 
 
+def test_clear_route_wipes_jobs_and_history(tmp_path, monkeypatch):
+    c = client(tmp_path, monkeypatch)
+    c.post("/scan/mock", follow_redirects=True)  # populates jobs + records a scan
+    assert len(db.get_jobs_with_eval(db.connect())) > 0
+    assert len(db.list_scans(db.connect())) > 0
+    r = c.post("/clear", follow_redirects=True)
+    assert r.status_code == 200
+    assert db.get_jobs_with_eval(db.connect()) == []  # jobs gone
+    assert db.list_scans(db.connect()) == []          # History gone too
+
+
+def test_paste_replaces_previous_job(tmp_path, monkeypatch):
+    c = client(tmp_path, monkeypatch)
+    # Claude off -> title comes from the first line of each blob.
+    blob1 = "First Role\nAcme\nFully remote, United States. Administer Azure AI and model deployment."
+    blob2 = "Second Role\nBeta\nFully remote, United States. Administer Azure AI and model deployment."
+    c.post("/paste", data={"posting": blob1}, follow_redirects=True)
+    r = c.post("/paste", data={"posting": blob2}, follow_redirects=True)
+    jobs = db.get_jobs_with_eval(db.connect())
+    assert len(jobs) == 1 and jobs[0]["title"] == "Second Role"  # only the latest paste remains
+    assert "First Role" not in r.text
+
+
+def test_clear_button_shown_only_when_jobs_exist(tmp_path, monkeypatch):
+    c = client(tmp_path, monkeypatch)
+    assert 'action="/clear"' not in c.get("/").text  # empty list -> no Clear button
+    c.post("/scan/mock", follow_redirects=True)
+    assert 'action="/clear"' in c.get("/").text       # jobs present -> Clear button shows
+
+
 def test_scan_history_records_mock_scan(tmp_path, monkeypatch):
     c = client(tmp_path, monkeypatch)
     c.post("/scan/mock", follow_redirects=True)

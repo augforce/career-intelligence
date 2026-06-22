@@ -58,7 +58,15 @@
 </div>
 {% endif %}
 
-<h2>Jobs ({{ jobs|length }})</h2>
+<div style="display:flex;align-items:center;gap:1rem">
+  <h2 style="margin:0">Jobs ({{ jobs|length }})</h2>
+  {% if jobs %}
+  <form method="post" action="/clear" style="margin:0"
+        onsubmit="return confirm('Clear all jobs and scan history?')">
+    <button>Clear</button>
+  </form>
+  {% endif %}
+</div>
 {% for j in jobs %}
 <article class="card cat-{{ j.category }}">
   <div class="row"><a href="/job/{{ j.id }}"><strong>{{ j.title }}</strong></a>
