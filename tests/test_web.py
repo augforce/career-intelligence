@@ -192,6 +192,33 @@ def test_search_claude_drops_onsite(tmp_path, monkeypatch):
     assert len(db.get_jobs_with_eval(db.connect())) == 0
 
 
+def test_search_keeps_claude_poor_remote_role(tmp_path, monkeypatch):
+    # A keyword-vetted remote role that Claude rates "poor" must STILL be shown -
+    # the deterministic stage already removed true junk, and the Claude layer is
+    # additive: it annotates, it does not delete a survivor just for a low score.
+    import app.config as cfg
+    c = client(tmp_path, monkeypatch)
+    monkeypatch.setattr(cfg, "ANTHROPIC_API_KEY", "sk-test")
+    from app.providers import aggregate
+    from app.providers.search_base import make_job
+    from app.analysis import claude_judge
+
+    def fake_search(params, settings, conn=None):
+        return ([make_job("AI Platform Operations Specialist", "Acme",
+                          "Fully remote, United States. Administer Azure AI, model deployment, RBAC. "
+                          "Build internal tools and automation. Requirements: APIs. Report to platform team.",
+                          arrangement="fully_remote", source="remotive")], [])
+
+    monkeypatch.setattr(aggregate, "search_all", fake_search)
+    monkeypatch.setattr(claude_judge, "judge",
+                        lambda job: {"remote": "remote", "fit": "poor", "score": 30,
+                                     "reason": "Borderline; leans engineering."})
+    r = c.post("/search", data={"query": "ai", "remote_only": "on"}, follow_redirects=True)
+    assert "AI Platform Operations Specialist" in r.text       # kept, not deleted
+    assert len(db.get_jobs_with_eval(db.connect())) == 1
+    assert "leans engineering" in r.text                       # Claude's read still shown
+
+
 def test_settings_source_toggle_persists(tmp_path, monkeypatch):
     c = client(tmp_path, monkeypatch)
     # full settings form with remoteok unchecked (omitted)

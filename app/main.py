@@ -88,11 +88,10 @@ def search(request: Request, query: str = Form(...), location: str = Form("Unite
                     stored -= 1
                     claude_dropped += 1
                     continue
-                if v["fit"] == "poor":
-                    db.delete_job(conn, jid)  # Claude judged it not a real fit
-                    stored -= 1
-                    hidden_poor += 1
-                    continue
+                # Claude refines the verdict but does NOT drop a keyword-vetted role
+                # just for scoring "poor": the deterministic stage already removed the
+                # true non-matches, and the Claude layer is meant to be additive, not
+                # a second filter that can empty the whole result set.
                 db.save_claude_verdict(conn, jid, v["remote"], v["fit"], v["score"], v["reason"], config.CLAUDE_MODEL)
                 db.set_eval_category(conn, jid, _FIT_TO_CAT[v["fit"]])
     db.record_scan(conn, "search", stored, stored)
