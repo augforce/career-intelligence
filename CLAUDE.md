@@ -49,8 +49,10 @@ since row ids are reused after a wipe.
 
 `/paste` is the centerpiece: `claude_judge.extract()` pulls title/company/location out of a pasted
 blob (falling back to the first line when Claude is off), then the normal pipeline runs. `/search`
-fans one query out to every enabled source, de-dupes by `dedupe_hash`, drops on-site and poor-fit
-roles, runs the Claude pass on survivors, and meters JSearch usage.
+fans one query out to every enabled source, de-dupes by `dedupe_hash`, drops on-site and keyword
+poor-fit roles, then runs the Claude pass on the survivors to refine and re-rank them. That pass is
+additive: it drops a genuinely on-site role for a remote-only search, but never deletes a vetted role
+just for a low fit score. JSearch usage is metered.
 
 `analysis/claude_judge.py` is where the Claude targeting lives (the `SYSTEM` prompt). It uses
 structured outputs (`output_config.format`); numeric fields are clamped in code, not the schema.

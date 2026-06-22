@@ -54,8 +54,10 @@ All of these rules live in `career_profile.yaml` — edit the weights (which mus
 When an Anthropic API key is configured, postings are also read by Claude, which judges the role's
 real remote status and skill-fit. **Claude's fit verdict becomes the headline score**; the
 deterministic keyword score is kept alongside it as a footnote so both are visible. The layer is
-strictly additive: with no key, the deterministic result stands and the app behaves identically.
-Set the model with `CI_CLAUDE_MODEL` (default `claude-haiku-4-5`).
+strictly additive: with no key, the deterministic result stands and the app behaves identically. In a
+board search it refines and labels the surviving roles — and drops any that are genuinely on-site —
+rather than discarding matches outright. Set the model with `CI_CLAUDE_MODEL` (default
+`claude-haiku-4-5`).
 
 ## Adding a job
 
