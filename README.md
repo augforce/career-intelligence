@@ -7,8 +7,10 @@ verdict in plain English.
 
 The scoring engine is **fully deterministic and runs with no API key**: it reads keyword signals from
 the posting, applies hard gates and a weighted rubric defined entirely in `career_profile.yaml`, and
-returns a transparent 0–100 score with a breakdown. An **optional Claude layer** (active only when an
-Anthropic API key is present) reads the posting in context and produces a headline fit verdict.
+returns a transparent 0–100 score with a breakdown. On top of that, an **active Claude layer** reads
+each posting in context — it produces the headline fit verdict, judges real (vs. fake) remote status,
+and refines and re-ranks board-search results. It engages whenever an Anthropic API key is present;
+without one, the deterministic engine stands alone.
 
 This repository ships **calibrated to a sample "AI Systems Administrator" target profile** as a worked
 example — a profile that favors administering and operating enterprise AI platforms (identity/access,
@@ -49,15 +51,15 @@ above so the configured port is honored.
 All of these rules live in `career_profile.yaml` — edit the weights (which must sum to 100),
 `signal_saturation`, keyword lists, penalties, gates, and bands there.
 
-### Optional Claude layer (set `ANTHROPIC_API_KEY`)
+### Claude layer (active with `ANTHROPIC_API_KEY`)
 
-When an Anthropic API key is configured, postings are also read by Claude, which judges the role's
-real remote status and skill-fit. **Claude's fit verdict becomes the headline score**; the
-deterministic keyword score is kept alongside it as a footnote so both are visible. The layer is
-strictly additive: with no key, the deterministic result stands and the app behaves identically. In a
-board search it refines and labels the surviving roles — and drops any that are genuinely on-site —
-rather than discarding matches outright. Set the model with `CI_CLAUDE_MODEL` (default
-`claude-haiku-4-5`).
+With an Anthropic API key configured, the Claude layer is **active** and becomes the headline of every
+verdict. It reads each posting in context: **its fit verdict becomes the headline score** (the
+deterministic keyword score is kept alongside as a footnote, so both stay visible); it judges the
+role's **real vs. fake remote status**; and in a board search it reads each surviving role to
+**refine and re-rank** them, dropping any that are genuinely on-site rather than discarding matches
+outright. The layer stays additive by design — with no key, the deterministic result stands and the
+app behaves identically. Set the model with `CI_CLAUDE_MODEL` (default `claude-haiku-4-5`).
 
 ## Adding a job
 
