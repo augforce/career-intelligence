@@ -66,7 +66,9 @@ def extract(text: str) -> dict | None:
         return None
     try:
         import anthropic
-        client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        # Retry transient 5xx/429s a few extra times so a brief API blip
+        # doesn't silently drop the verdict (SDK default is 2).
+        client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, max_retries=4)
         resp = client.messages.create(
             model=config.CLAUDE_MODEL,
             max_tokens=300,
@@ -87,7 +89,9 @@ def judge(job) -> dict | None:
         return None
     try:
         import anthropic
-        client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        # Retry transient 5xx/429s a few extra times so a brief API blip
+        # doesn't silently drop the verdict (SDK default is 2).
+        client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, max_retries=4)
         prompt = (
             f"Title: {job.title}\nCompany: {job.company_name}\n"
             f"Location: {job.location_raw or 'not stated'}\n\n"
