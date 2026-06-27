@@ -40,6 +40,14 @@ app/db.py         only module that touches SQLite (jobs, evaluations, claude_ver
 app/main.py       routes: / /search /import /paste /scan/mock /clear /settings /watchlist /history
 ```
 
+**Scoring layers (`scoring/rubric.py`).** Two prominence/composition adjustments sit on top of raw
+keyword counts, with no role-specific keyword lists: (1) **prominence weighting** — a favorable keyword
+in the title or opening pitch (first `LEAD_CHARS`) counts in full, one only buried deep in the body
+counts `BODY_WEIGHT` (`signals.weighted_hits`); (2) a **focus factor** — when AI-platform + build work
+is a small share of the role's total favorable signal, the whole favorable score is derated toward
+`FOCUS_FLOOR` (`_focus_factor`), so a role that only brushes the target work cannot reach the top
+bands. Gates and penalties keep raw counts by design.
+
 `_ingest()` runs deterministic scoring + stores the job. `_claude_pass()` runs `claude_judge.judge()`
 on top, saves the verdict (incl. `score`) to `claude_verdicts`, and re-categorizes via `_FIT_TO_CAT`.
 Both `/import` and `/paste` first wipe the existing jobs (each evaluation replaces the prior one — the
@@ -66,16 +74,20 @@ structured outputs (`output_config.format`); numeric fields are clamped in code,
   default `claude-haiku-4-5`; `CI_CLAUDE_MAX_PER_SEARCH`, default 25).
 - Tune matching: edit `career_profile.yaml` (weights must sum to 100). `signal_saturation` and
   `bands` control generosity; `favorable_signals` add recognized terms; `penalty_signals` (incl.
-  `web_dev`, `sales_customer`) and `gates` push roles down / exclude them. To retarget the Claude
-  verdict, edit the `SYSTEM` prompt in `app/analysis/claude_judge.py`.
+  `web_dev`, `sales_customer`, and `independent_coding` for from-scratch / solo-authorship coding
+  requirements) and `gates` push roles down / exclude them. To retarget the Claude verdict, edit the
+  `SYSTEM` prompt in `app/analysis/claude_judge.py`.
 - Reset state: delete `data/career_intelligence.db`.
 
 ## Testing expectations
 
 Scoring, gates, provider mappings, the aggregator, the Claude judge (mocked), and the web routes are
 covered by unit tests; keep them green. The deterministic scorer rewards keyword density, so
-calibration lives in `career_profile.yaml`, not in Python. Prefer small vertical slices and frequent
-commits. Build transparently, not by vibe-coding; don't add features beyond what's asked.
+calibration lives in `career_profile.yaml`, not in Python. A labeled regression set
+(`tests/fixtures/labeled_jobs.py`) with a harness (`python -m tests.calibration`) and category
+invariants (`tests/test_calibration.py`) guards the global prominence/focus layers — run it before and
+after any tuning. Prefer small vertical slices and frequent commits. Build transparently, not by
+vibe-coding; don't add features beyond what's asked.
 
 ## Roadmap (not built)
 

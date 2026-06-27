@@ -51,6 +51,13 @@ above so the configured port is honored.
 All of these rules live in `career_profile.yaml` — edit the weights (which must sum to 100),
 `signal_saturation`, keyword lists, penalties, gates, and bands there.
 
+Two refinements keep keyword-matching honest, with no role-specific lists: a match in the **title or
+opening pitch counts more** than one buried deep in a posting, and a role whose on-target (AI-platform
+and build) content is only a small share of its signal is **derated**, so a role that merely brushes
+the target work can't reach the top bands off incidental mentions. A separate `independent_coding`
+penalty docks roles that require writing code from scratch independently, while leaving phrasing like
+"familiarity with Python a plus" untouched.
+
 ### Claude layer (active with `ANTHROPIC_API_KEY`)
 
 With an Anthropic API key configured, the Claude layer is **active** and becomes the headline of every
@@ -109,6 +116,8 @@ When the Claude layer is enabled, its targeting lives in the `SYSTEM` prompt in
 
 - `pytest -q` runs the full suite. No test touches the network or makes a live Claude call (providers
   are mocked; an autouse fixture clears the API key).
+- `python -m tests.calibration` scores a labeled set of postings against the engine and flags any whose
+  category drifts from its expected label; run it before and after changing scoring rules.
 - Weights in `career_profile.yaml` must sum to 100 (validated on load).
 - **Too few roles clear into Bridge/Strong?** Broaden `favorable_signals`, or lower
   `signal_saturation` / the `bands` thresholds.

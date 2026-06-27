@@ -10,3 +10,7 @@ logs/
 # Personal source material — never publish
 reference/
 docs/
+
+# personal demo recording (never publish)
+careerIntelligence.mov
+*.mov

@@ -44,6 +44,14 @@ penalty_signals:
   support_burden:   { keywords: ["ticket", "helpdesk", "help desk", "tier 1", "tier 2", "end-user support", "desktop support", "deskside"], per_hit: 3, max: 15 }
   # Senior-software-engineering requirements (deep coding + years of dev experience).
   traditional_dev:  { keywords: ["algorithm", "data structures", "distributed systems", "production code", "system design interview", "years of software", "years of software development", "years of engineering", "years of professional software", "senior software engineer", "staff software engineer", "principal software engineer", "strong programming", "object-oriented", "microservices architecture"], per_hit: 4, max: 24 }
+  # Independent / from-scratch authorship framing — roles that require writing code
+  # from scratch, solo, as the core bar. Complements traditional_dev (which catches
+  # senior-SWE phrasing) and is NOT covered by the composition rule, since a role can
+  # be genuinely AI-centered yet still demand independent hand-coding. Discriminates on
+  # AUTHORSHIP FRAMING, not on a language being mentioned: bare "Python"/"code" and the
+  # good-fit phrasings "familiarity with", "comfortable reading", "a plus", "exposure
+  # to" are deliberately excluded — the candidate clears those via AI-assisted tooling.
+  independent_coding: { keywords: ["proficiency in python", "proficient in python", "proficiency in java", "proficient in java", "proficiency in javascript", "proficient in javascript", "proficiency in typescript", "proficient in typescript", "proficiency in c++", "proficient in c++", "proficiency in go", "proficiency in ruby", "proficiency in rust", "fluency in python", "fluent in python", "fluency in java", "fluent in java", "fluency in javascript", "fluent in javascript", "fluency in typescript", "expert in python", "expert in java", "expert in javascript", "expert in typescript", "strong coding", "advanced programming", "advanced coding", "expert-level programming", "expert-level coding", "from scratch", "from the ground up", "independently develop", "independently build", "independently design", "develop independently", "build independently", "code independently", "production code independently"], per_hit: 6, max: 24 }
   sales_customer:   { keywords: ["customer success", "account management", "sales quota", "pre-sales", "upsell", "renewals", "customer programs", "strategic customer", "account executive"], per_hit: 4, max: 16 }
   # CRM / generic-SaaS-admin roles. "saas administration" is intentionally NOT here —
   # SaaS/systems administration is a positive for the AI-admin archetype.
