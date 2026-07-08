@@ -35,6 +35,22 @@ The port defaults to **8900**. To change it, set `CI_PORT` in a local `.env` (e.
 Starting with a bare `uvicorn app.main:app` instead would fall back to port 8000 — use the launcher
 above so the configured port is honored.
 
+## MCP server
+
+`server.py` exposes the deterministic engine over MCP (FastMCP, stdio) so any MCP client — Claude
+Desktop, Claude Code — can score postings in natural language: tools `score_posting` and
+`batch_score`, plus a read-only `criteria://current` resource showing the active rubric. The MCP
+tools are **fully offline**: no network calls, no database, no API key — the same guarantee the
+deterministic core gives the web app. `manifest.json` describes the server and discloses, under
+`permissions.network`, every endpoint the wider app can contact.
+
+```bash
+pip install fastmcp
+python server.py                          # serve over stdio
+fastmcp dev server.py                     # try it in the MCP Inspector
+fastmcp install claude-desktop server.py  # register with Claude Desktop
+```
+
 ## How scoring works
 
 ### Deterministic baseline (always on, no key required)
@@ -98,6 +114,12 @@ free keys you add to a local `.env` (gitignored — copy `.env.example` to `.env
 
 LinkedIn and Indeed have no open search API; their listings are reached only indirectly through
 JSearch (Google for Jobs), never by scraping.
+
+Every network endpoint the app can contact is disclosed in `manifest.json` under
+`permissions.network`: `remotive.com`, `remoteok.com`, `www.arbeitnow.com` (no key required),
+`api.adzuna.com` and `jsearch.p.rapidapi.com` (only when their keys are set), plus
+`api.anthropic.com` for the optional Claude layer. All job-board traffic goes through a single seam
+(`app/providers/http.get_json`); nothing else in the app touches the network.
 
 ## Calibrating to a different role
 

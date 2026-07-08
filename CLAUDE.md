@@ -15,7 +15,10 @@ Claude layer adds a headline fit verdict when an Anthropic API key is present.
   and the deterministic keyword score is shown as a footnote.
 - **Keyword search is the only board-networked feature**, and all board network goes through one seam
   (`app/providers/http.get_json`). Tests monkeypatch it — no test hits the live network. Manual
-  import and paste never fetch the application URL.
+  import and paste never fetch the application URL. Every reachable endpoint is disclosed in
+  `manifest.json` (`permissions.network`) — any new host must be added there.
+- **The MCP server (`server.py`) is fully offline.** Its tools (`score_posting`, `batch_score`) wrap
+  only the deterministic core: no network, no database, no API key.
 - **Search-source API keys live in `.env`** (gitignored), read via `app/config.py`. The three free
   boards (Remotive, RemoteOK, Arbeitnow) need no key; JSearch/Adzuna activate only when keys are set.
 - **Hard gates are separate from scoring** and fire only on documented dominance thresholds in
@@ -38,6 +41,8 @@ analysis/claude_judge (optional)                         # posting -> {remote, f
 app/evaluate.py   orchestrates deterministic scoring per job
 app/db.py         only module that touches SQLite (jobs, evaluations, claude_verdicts, ...)
 app/main.py       routes: / /search /import /paste /scan/mock /clear /settings /watchlist /history
+server.py         MCP server (FastMCP, stdio): score_posting / batch_score — offline, engine-only
+manifest.json     MCP manifest; discloses every reachable endpoint (permissions.network)
 ```
 
 **Scoring layers (`scoring/rubric.py`).** Two prominence/composition adjustments sit on top of raw
