@@ -1,4 +1,5 @@
 import sqlite3
+import pytest
 from app import db
 from app.models import NormalizedJob, Evaluation, Classification, GateResult, ScoreResult
 
@@ -47,6 +48,22 @@ def test_company_crud_and_settings_roundtrip():
     assert db.list_companies(c)[0]["active"] == 0
     db.save_settings(c, {"include_hybrid": True, "max_travel_pct": 10})
     assert db.get_settings(c)["include_hybrid"] is True
+
+
+def test_update_company_multiple_fields():
+    c = _conn()
+    cid = db.add_company(c, "Acme", "greenhouse", "https://acme.com/careers", "watch", True)
+    db.update_company(c, cid, name="Beta", notes="renamed")
+    row = db.list_companies(c)[0]
+    assert row["name"] == "Beta" and row["notes"] == "renamed"
+
+
+def test_update_company_rejects_unknown_columns():
+    c = _conn()
+    cid = db.add_company(c, "Acme", "greenhouse", "https://acme.com/careers", "watch", True)
+    with pytest.raises(ValueError):
+        db.update_company(c, cid, **{"name=?, active": "x"})
+    assert db.list_companies(c)[0]["name"] == "Acme"
 
 
 def test_clear_jobs_wipes_jobs_evals_decisions():

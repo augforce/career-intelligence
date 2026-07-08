@@ -1,0 +1,68 @@
+{
+  "manifest_version": "0.2",
+  "name": "job-match",
+  "display_name": "Career Intelligence — job-match MCP server",
+  "version": "1.0.0",
+  "description": "Deterministic job-posting fit scorer exposed over MCP. The MCP tools (score_posting, batch_score) and the criteria:// resource are fully offline: no network calls, no API keys.",
+  "author": {
+    "name": "augforce"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "server.py",
+    "mcp_config": {
+      "command": "python",
+      "args": ["server.py"]
+    }
+  },
+  "tools": [
+    {
+      "name": "score_posting",
+      "description": "Score one pasted job posting against the local rubric. Offline."
+    },
+    {
+      "name": "batch_score",
+      "description": "Score a list of pasted job postings. Offline."
+    }
+  ],
+  "permissions": {
+    "network": {
+      "description": "The MCP tools themselves contact no network endpoint. The endpoints below are used only by the optional FastAPI web app bundled in this repository (python -m app.main), and only for its opt-in keyword-search and Claude-verdict features. All job-board traffic goes through the single seam app/providers/http.get_json.",
+      "allowed_hosts": [
+        {
+          "host": "remotive.com",
+          "used_by": "web app keyword search (Remotive board)",
+          "requires_key": false
+        },
+        {
+          "host": "remoteok.com",
+          "used_by": "web app keyword search (RemoteOK board)",
+          "requires_key": false
+        },
+        {
+          "host": "www.arbeitnow.com",
+          "used_by": "web app keyword search (Arbeitnow board)",
+          "requires_key": false
+        },
+        {
+          "host": "api.adzuna.com",
+          "used_by": "web app keyword search (Adzuna board)",
+          "requires_key": true,
+          "activated_by": "ADZUNA_APP_ID + ADZUNA_APP_KEY in .env"
+        },
+        {
+          "host": "jsearch.p.rapidapi.com",
+          "used_by": "web app keyword search (JSearch board, metered)",
+          "requires_key": true,
+          "activated_by": "JSEARCH_API_KEY in .env"
+        },
+        {
+          "host": "api.anthropic.com",
+          "used_by": "web app optional Claude fit-verdict layer (Anthropic SDK)",
+          "requires_key": true,
+          "activated_by": "ANTHROPIC_API_KEY in .env"
+        }
+      ]
+    }
+  }
+}

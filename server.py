@@ -16,6 +16,17 @@ Register with Claude Desktop:
 
 This skeleton runs end-to-end on a STUB. Confirm the protocol works first,
 then replace the one marked seam (`run_engine`) with a call into your real core.
+
+Network disclosure:
+    The MCP tools in this file (score_posting, batch_score) and the
+    criteria:// resource are fully offline — they make no network calls and
+    need no API key. The wider repository also ships a FastAPI web app
+    (python -m app.main) whose opt-in keyword search contacts these job
+    boards through the single seam app/providers/http.get_json:
+    remotive.com, remoteok.com, www.arbeitnow.com (no key), api.adzuna.com
+    and jsearch.p.rapidapi.com (only when keys are set in .env). Its optional
+    Claude layer contacts api.anthropic.com only when ANTHROPIC_API_KEY is
+    set. The full list also lives in manifest.json (permissions.network).
 """
 
 from typing import Literal, Optional

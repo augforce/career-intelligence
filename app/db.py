@@ -149,8 +149,9 @@ def update_job_arrangement(conn, job_id, arrangement) -> None:
 
 
 def delete_job(conn, job_id) -> None:
-    for t in ("evaluations", "decisions", "claude_verdicts"):
-        conn.execute(f"DELETE FROM {t} WHERE job_id=?", (job_id,))
+    conn.execute("DELETE FROM evaluations WHERE job_id=?", (job_id,))
+    conn.execute("DELETE FROM decisions WHERE job_id=?", (job_id,))
+    conn.execute("DELETE FROM claude_verdicts WHERE job_id=?", (job_id,))
     conn.execute("DELETE FROM jobs WHERE id=?", (job_id,))
     conn.commit()
 
@@ -189,13 +190,27 @@ def list_companies(conn) -> list[dict]:
     return [dict(r) for r in conn.execute("SELECT * FROM companies ORDER BY name").fetchall()]
 
 
+# One literal statement per updatable column: no SQL text is ever assembled
+# from caller input, and anything outside this allowlist is rejected.
+_COMPANY_UPDATE_SQL = {
+    "name": "UPDATE companies SET name=? WHERE id=?",
+    "ats_type": "UPDATE companies SET ats_type=? WHERE id=?",
+    "careers_url": "UPDATE companies SET careers_url=? WHERE id=?",
+    "notes": "UPDATE companies SET notes=? WHERE id=?",
+    "active": "UPDATE companies SET active=? WHERE id=?",
+}
+
+
 def update_company(conn, cid, **fields) -> None:
     if not fields:
         return
+    unknown = sorted(set(fields) - set(_COMPANY_UPDATE_SQL))
+    if unknown:
+        raise ValueError(f"unknown company column(s): {', '.join(unknown)}")
     if "active" in fields:
         fields["active"] = int(fields["active"])
-    sets = ", ".join(f"{k}=?" for k in fields)
-    conn.execute(f"UPDATE companies SET {sets} WHERE id=?", (*fields.values(), cid))
+    for col, value in fields.items():
+        conn.execute(_COMPANY_UPDATE_SQL[col], (value, cid))
     conn.commit()
 
 
